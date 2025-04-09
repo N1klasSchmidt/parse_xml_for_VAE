@@ -3,8 +3,7 @@ import pytest
 import xml.etree.ElementTree as ET
 import pandas as pd
 import os
-
-path_to_test_xml = "./testing_file.xml"
+import pathlib
 
 def xml_parser(path_to_xml_file: str) -> dict:
 
@@ -32,7 +31,6 @@ def xml_parser(path_to_xml_file: str) -> dict:
 
     return results
 
-result = xml_parser(path_to_test_xml)
 
 def dict_to_df(data_dict: dict, patient: int):
 
@@ -72,7 +70,32 @@ def dict_to_df(data_dict: dict, patient: int):
         
     return
     
-dict_to_df(result, patient=1)
+
+def get_all_xml_paths(directory: str) -> list:
+    xml_paths = pathlib.Path(directory).rglob("*.xml")
+    xml_paths = list(xml_paths)
+    return xml_paths
 
 
-    
+def process_all_paths(directory: str): 
+    paths = get_all_xml_paths(directory)
+
+    for idx, path in enumerate(paths): 
+        print(idx, path)
+        parsed_dict = xml_parser(path)
+        
+        if idx == 0: 
+            for k, v in parsed_dict.items():
+                filepath = f"./Aggregated_{k}.csv"
+                if os.path.exists(filepath):
+                    if os.path.getsize(filepath) != 0:
+                        f = open(filepath, "w+")
+                        f.close()
+
+        dict_to_df(parsed_dict, patient=idx)
+    return
+
+
+if __name__ == "__main__":
+    directory = "./testing_files"
+    process_all_paths(directory=directory)
