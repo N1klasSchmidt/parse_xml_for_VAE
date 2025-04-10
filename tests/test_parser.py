@@ -1,12 +1,10 @@
 import pytest
 import sys
 sys.path.append("/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/module")
-from module.parser import xml_parser
-from module.parser import dict_to_df
-from module.parser import get_all_xml_paths
-from module.parser import valid_patients
+from module.parser import xml_parser, valid_patients, dict_to_df, get_all_xml_paths
 import os
 import pathlib
+import pandas as pd
 
 def test_parser():
     path_to_test_xml = "./testing_files/dataset_1/label/catROI_IXI541-IOP-1146-T1.xml"
@@ -44,5 +42,4 @@ def test_valid_patients():
     
     pat_list = valid_patients(paths_to_consider)
     assert len(pat_list) != 0
-    
     

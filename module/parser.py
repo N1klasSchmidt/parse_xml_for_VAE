@@ -6,7 +6,6 @@ import os
 import pathlib
 import regex as re
 
-# TO-DO: Make to class, specify exact list types e.g. list[str]
 
 def add_to_gitignore(path: str):
     with open(".gitignore", "a") as g:
@@ -63,6 +62,7 @@ def dict_to_df(data_dict: dict, patient: str):
         data = {volume: v[volume] for volume in volumes}
         df_new = pd.DataFrame(data, index=v["names"])
         df_new.columns = index
+
         # Check if file exists and has content
         if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
             # If file doesn't exist or is empty, just save the new dataframe
@@ -76,7 +76,7 @@ def dict_to_df(data_dict: dict, patient: str):
                 
                 # Concatenate horizontally while preserving MultiIndex. To understand concatenation see process all paths function.
                 result = pd.concat([df_existing, df_new], axis=1)
-                
+                # result.set_index(keys="Filename", inplace=True)
                 # Save with MultiIndex preserved
                 result.to_csv(filepath)  # feature columns
                 result_t = result.T

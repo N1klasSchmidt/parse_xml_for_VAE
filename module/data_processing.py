@@ -12,29 +12,42 @@ def flatten_array(df: pd.DataFrame) -> np.ndarray:
     return flat_array
 
 
-class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
-    def __init__(self, subjects, transforms=None):
-        self.subjects = subjects
-        self.transforms = transforms
+def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
+    norm_df = df.copy()
+    columns = norm_df.columns
+    for col in columns: 
+        c_median = norm_df[col].median()
+        c_sd = norm_df[col].std()
+        if c_sd == 0:
+            norm_df[col] = 0 
+        else:
+            norm_df[col] = norm_df[col].apply(lambda x: (x - c_median) / c_sd)
+    return norm_df
 
-    def __len__(self):
-        return len(self.subjects)
 
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
+# class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
+#     def __init__(self, subjects, transforms=None):
+#         self.subjects = subjects
+#         self.transforms = transforms
 
-        measurements = self.subjects[idx]["measurements"]
-        labels = self.subjects[idx]["labels"]
+#     def __len__(self):
+#         return len(self.subjects)
 
-        if self.transform:
-            transformed = self.transforms(measurements=measurements)
-            measurements = transformed['measurements']
+#     def __getitem__(self, idx):
+#         if torch.is_tensor(idx):
+#             idx = idx.tolist()
 
-        measurements = torch.as_tensor(measurements, dtype=torch.float64)
-        labels = torch.as_tensor(labels, dtype=torch.int64)
+#         measurements = self.subjects[idx]["measurements"]
+#         labels = self.subjects[idx]["labels"]
 
-        return measurements, labels
+#         if self.transform:
+#             transformed = self.transforms(measurements=measurements)
+#             measurements = transformed['measurements']
+
+#         measurements = torch.as_tensor(measurements, dtype=torch.float64)
+#         labels = torch.as_tensor(labels, dtype=torch.int64)
+
+#         return measurements, labels
 
 
 def load_mri_data_2D(
@@ -98,9 +111,10 @@ def load_mri_data_2D(
     # For each subject, collect MRI data and variable data in the Subject object
     subjects = []
 
-    data = pd.read_csv(data_path)
-    data.set_index("Filename", inplace=True)
-    all_file_names = data.index
+    data = pd.read_csv(data_path, header=[0, 1], index_col=0)
+    # data.set_index("Filename", inplace=True)
+    data = normalize_df(data)
+    all_file_names = data.columns
 
     for index, row in data_overview.iterrows():
         subject = {} 
@@ -117,9 +131,9 @@ def load_mri_data_2D(
         else:
             file_name = row["Filename"]
 
-        patient_data = data.loc[file_name]
+        patient_data = data[file_name]
         flat_patient_data = flatten_array(patient_data).tolist()
-        
+
         subject["name"] = file_name
         subject["measurements"] = flat_patient_data
         subject["labels"] = {}
@@ -140,24 +154,30 @@ def load_mri_data_2D(
     return subjects, data_overview
 
 
-# This function processes a list of subjects by applying a series of transformations to them, and then loads
-# them into a DataLoader object.
-def process_subjects(
-    # The list of tio.Subject objects that you want to process
-    subjects: List,
-    # The transformations that you want to apply to the subjects
-    transforms: torch.compose,
-    # The batch size for the DataLoader (the larger, the more memory is needed)
-    batch_size: int,
-    # Whether the data should be shuffled or not. Shuffling is important for training, but not for validation.
-    shuffle_data: bool,
-) -> DataLoader:
+# # This function processes a list of subjects by applying a series of transformations to them, and then loads
+# # them into a DataLoader object.
+# def process_subjects(
+#     # The list of tio.Subject objects that you want to process
+#     subjects: List,
+#     # The transformations that you want to apply to the subjects
+#     transforms: torch.compose,
+#     # The batch size for the DataLoader (the larger, the more memory is needed)
+#     batch_size: int,
+#     # Whether the data should be shuffled or not. Shuffling is important for training, but not for validation.
+#     shuffle_data: bool,
+# ) -> DataLoader:
 
-    # Apply transformations
-    dataset = CustomDataset(subjects=subjects, transforms=transform)
+#     # Apply transformations
+#     dataset = CustomDataset(subjects=subjects, transforms=transform)
 
-    # Create data loader
-    data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle_data)
+#     # Create data loader
+#     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle_data)
 
-    # Return the DataLoader object
-    return data_loader
+#     # Return the DataLoader object
+#     return data_loader
+
+
+if __name__ == "__main__":
+    subjects, overview = load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",
+                                          csv_path="./metadata_20250110/full_data_train_valid_test.csv")
+    print(subjects)
