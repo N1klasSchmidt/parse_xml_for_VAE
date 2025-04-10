@@ -46,7 +46,7 @@ def dict_to_df(data_dict: dict, patient: str):
     # a csv file (once with rows as features and once with columns as features).
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
         filepath = f"./xml_data/Aggregated_{k}.csv"  
-        filepath_t = f"./xml_data/Aggregated_{k}_t.csv"
+        filepath_t = f"./xml_data_t/Aggregated_{k}_t.csv"
 
         volumes = [vs for vs in v.keys() if vs != "names"]  # Measurements are volumes of white and gray matter
 
@@ -156,9 +156,13 @@ def valid_patients(paths: list) -> list:
 if __name__ == "__main__":
     directory = "./testing_files"
     add_to_gitignore(path="xml_data")
+    add_to_gitignore(path="xml_data_t")
 
     if not os.path.exists("./xml_data"):
         os.makedirs("./xml_data")
+
+    if not os.path.exists("./xml_data_t"):
+        os.makedirs("./xml_data_t")
 
     # Determine which metadata files should be used to filter xml files. 
     paths_to_consider = ["./metadata_20250110/full_data_train_valid_test.csv",
