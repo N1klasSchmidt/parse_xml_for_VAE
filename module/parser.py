@@ -55,7 +55,7 @@ def dict_to_df(data_dict: dict, patient: str):
 
         tuples = list(zip(*arrays))
 
-        index = pd.MultiIndex.from_tuples(tuples, names = ["Patient", "Volume"])
+        index = pd.MultiIndex.from_tuples(tuples, names = ["Filename", "Volume"])
 
         if "names" not in v:
             print(f"No names found in section {k}, skipping.")
@@ -130,9 +130,14 @@ def process_all_paths(directory: str, valid_patients: list):
         print(f"Processing file {idx+1}/{len(paths)}: {path}")
         parsed_dict = xml_parser(path)
 
-        match_no_ext = re.search(r"([^/\\]+)$", path)
+        match_no_ext = re.search(r"([^/\\]+)\.[^./\\]*$", path)  # Extract file stem
         if match_no_ext:
             patient_id = match_no_ext.group(1)
+        
+        new_match = re.search(r"catROI_(.+)", patient_id)  # Extract file ID
+        if new_match:
+            patient_id = new_match.group(1)
+
         dict_to_df(parsed_dict, patient=patient_id)
     return
 
