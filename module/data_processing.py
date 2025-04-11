@@ -30,6 +30,13 @@ def get_all_data(directory: str) -> list:
     return data_paths
 
 
+def get_atlas(path: pathlib.PosixPath) -> str:
+    stem = path.stem
+    match = re.search(r"_(.*)", stem)
+    if match:
+        atlas = match.group(1)
+    return atlas
+
 
 # class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
 #     def __init__(self, subjects, transforms=None):
@@ -216,9 +223,10 @@ def load_mri_data_2D_all_atlases(
     subjects = {}
 
     for data_path in data_paths:
+        current_atlas = get_atlas(data_path)
 
         data = pd.read_csv(data_path, header=[0, 1], index_col=0)
-        # data.set_index("Filename", inplace=True)
+        
         data = normalize_df(data)
         
         all_file_names = data.columns
@@ -226,9 +234,6 @@ def load_mri_data_2D_all_atlases(
         for index, row in data_overview.iterrows():
             
             if not row["Filename"] in all_file_names:
-                continue
-            
-            if row["Filename"] in subjects: # There seems to be some issue here! 
                 continue
 
             # Format correct filename
@@ -240,23 +245,27 @@ def load_mri_data_2D_all_atlases(
             else:
                 file_name = row["Filename"]
 
+            if file_name in subjects: 
+                if data_path in subjects[file_name]["measurements"]:
+                    continue
+
             patient_data = data[file_name]
             flat_patient_data = flatten_array(patient_data).tolist()
 
             if not file_name in subjects: 
                 subjects[file_name] = {"name": file_name,
-                                       "measurements": {data_path: flat_patient_data},
+                                       "measurements": {current_atlas: flat_patient_data},
                                        "labels": {}
                                       }
             else: 
-                subjects[file_name]["measurements"][data_path] = flat_patient_data
+                subjects[file_name]["measurements"][current_atlas] = flat_patient_data
             
 
             for var in variables:
                 subjects[file_name]["labels"][var] = one_hot_labels[var].loc[index].to_numpy().tolist()
 
     # Return the list of subjects and the filtered annotations
-    return subjects, data_overview
+    return list(subjects.values()), data_overview
 
 
 # # This function processes a list of subjects by applying a series of transformations to them, and then loads

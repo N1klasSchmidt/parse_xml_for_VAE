@@ -1,6 +1,7 @@
 import pytest
 import pandas as pd
-from module.data_processing import load_mri_data_2D, flatten_array, normalize_df, load_mri_data_2D_all_atlases, get_all_data
+import pathlib
+from module.data_processing import load_mri_data_2D, flatten_array, normalize_df, load_mri_data_2D_all_atlases, get_all_data, get_atlas
 
 def test_loading(): 
     path = "./xml_data/Aggregated_suit.csv"
@@ -39,6 +40,11 @@ def test_auto_process():
     data_paths = get_all_data("./xml_data")
     subjects, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
                                                            csv_path="./metadata_20250110/full_data_train_valid_test.csv")
-    assert isinstance(subjects, dict) and isinstance(data_overview, pd.DataFrame)
+    assert isinstance(subjects, list) and isinstance(data_overview, pd.DataFrame)
     assert len(subjects) == 2
     
+def test_get_atlas():
+    path = pathlib.Path(r"./xml_data/Aggregated_thalamic_nuclei.csv")
+    atlas = get_atlas(path)
+    assert atlas == "thalamic_nuclei"
+
