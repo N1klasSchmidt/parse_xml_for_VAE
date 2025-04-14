@@ -8,22 +8,33 @@ import pathlib
 
 
 def flatten_array(df: pd.DataFrame) -> np.ndarray:
+    # Converts data frame to flattened array. 
     array = df.to_numpy()
     flat_array = array.flatten()
     return flat_array
 
 
 def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
-    norm_df = df.copy()
-    columns = norm_df.columns
-    for col in columns: 
-        c_median = norm_df[col].median()
-        c_sd = norm_df[col].std()
-        if c_sd == 0:
-            norm_df[col] = 0 
-        else:
-            norm_df[col] = norm_df[col].apply(lambda x: (x - c_median) / c_sd)
-    return norm_df
+    # Normalizes each column in a data frame by subtracting the median and dividing by the standard deviation.
+    
+    # normalize the columns (patient volumes) and scale the rows (ROIs)
+
+    df_copy = df.copy()
+
+    norm_df = (df_copy-df_copy.mean())/df_copy.std() 
+
+    norm_copy = norm_df.copy()
+
+    # norm_copy.unique()
+
+    mask = norm_df.columns.get_level_values(-1).isin(["Vgm", "Vwm"])
+    cols_to_scale = norm_df.columns[mask]
+
+    if len(cols_to_scale) > 0:
+        for col_to_scale in cols_to_scale:
+            norm_copy[col_to_scale] = norm_copy[col_to_scale].apply(lambda x: (x - x.mean()) / x.std(), axis=1)
+        
+    return norm_copy
 
 def get_all_data(directory: str) -> list:
     data_paths = list(pathlib.Path(directory).rglob("*.csv"))
@@ -294,14 +305,14 @@ def load_mri_data_2D_all_atlases(
 if __name__ == "__main__":
     subjects, overview = load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",
                                           csv_path="./metadata_20250110/full_data_train_valid_test.csv")
-    print("\nSubjects for one atlas:\n")
-    print(subjects)
+    #print("\nSubjects for one atlas:\n")
+    #print(subjects)
 
     data_paths = get_all_data("./xml_data")
-    print(data_paths)
+    #print(data_paths)
     subjects_all, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
                                                            csv_path="./metadata_20250110/full_data_train_valid_test.csv")
-    print("\nSubjects with all atlases:\n")
-    print(subjects_all)
+    #print("\nSubjects with all atlases:\n")
+    #print(subjects_all)
     
     
