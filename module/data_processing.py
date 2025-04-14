@@ -14,27 +14,25 @@ def flatten_array(df: pd.DataFrame) -> np.ndarray:
     return flat_array
 
 
-def normalize_df(df: pd.DataFrame) -> pd.DataFrame:
-    # Normalizes each column in a data frame by subtracting the median and dividing by the standard deviation.
-    
-    # normalize the columns (patient volumes) and scale the rows (ROIs)
+def normalize_and_scale_df(df: pd.DataFrame) -> pd.DataFrame:
+    # Normalizes the columns (patient volumes) by Min-Max Scaling and scales the rows (ROIs) with Z-transformation.
 
     df_copy = df.copy()
 
-    norm_df = (df_copy-df_copy.mean())/df_copy.std() 
+    norm_df = df_copy/df_copy.max() # Min-Max Scaling
 
     norm_copy = norm_df.copy()
 
-    # norm_copy.unique()
+    cols = norm_df.columns.get_level_values(-1).tolist()
+    unique_cols = list(set(cols))
 
-    mask = norm_df.columns.get_level_values(-1).isin(["Vgm", "Vwm"])
-    cols_to_scale = norm_df.columns[mask]
-
-    if len(cols_to_scale) > 0:
-        for col_to_scale in cols_to_scale:
-            norm_copy[col_to_scale] = norm_copy[col_to_scale].apply(lambda x: (x - x.mean()) / x.std(), axis=1)
+    if len(unique_cols) > 0:
+        for col_type in unique_cols:
+            cols_to_scale = [col for col in norm_df.columns if col[-1] == col_type]
+            norm_copy[cols_to_scale] = norm_copy[cols_to_scale].apply(lambda x: (x - x.mean()) / x.std(), axis="columns")
         
     return norm_copy
+
 
 def get_all_data(directory: str) -> list:
     data_paths = list(pathlib.Path(directory).rglob("*.csv"))
@@ -76,7 +74,7 @@ def get_atlas(path: pathlib.PosixPath) -> str:
 
 def load_mri_data_2D(
     # The path to the directory where the MRI data is stored (.csv file formats)
-    data_path: str,
+    data_path: pathlib.PosixPath,
     # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
     csv_path: str = None,
     # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
@@ -137,7 +135,11 @@ def load_mri_data_2D(
 
     data = pd.read_csv(data_path, header=[0, 1], index_col=0)
     # data.set_index("Filename", inplace=True)
-    data = normalize_df(data)
+    data = normalize_and_scale_df(data)
+    
+    atlas_name = data_path.stem
+    data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
+        
     all_file_names = data.columns
 
     for index, row in data_overview.iterrows():
@@ -238,8 +240,11 @@ def load_mri_data_2D_all_atlases(
 
         data = pd.read_csv(data_path, header=[0, 1], index_col=0)
         
-        data = normalize_df(data)
+        data = normalize_and_scale_df(data)
         
+        atlas_name = data_path.stem
+        data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
+
         all_file_names = data.columns
 
         for index, row in data_overview.iterrows():
@@ -275,6 +280,8 @@ def load_mri_data_2D_all_atlases(
             for var in variables:
                 subjects[file_name]["labels"][var] = one_hot_labels[var].loc[index].to_numpy().tolist()
 
+
+
     # Return the list of subjects and the filtered annotations
     return list(subjects.values()), data_overview
 
@@ -303,7 +310,11 @@ def load_mri_data_2D_all_atlases(
 
 
 if __name__ == "__main__":
-    subjects, overview = load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",
+    
+    if not os.path.exists("./processed_data"):
+        os.makedirs("./processed_data")
+    
+    subjects, overview = load_mri_data_2D(data_path=pathlib.Path("./xml_data/Aggregated_suit.csv"),
                                           csv_path="./metadata_20250110/full_data_train_valid_test.csv")
     #print("\nSubjects for one atlas:\n")
     #print(subjects)
