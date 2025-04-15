@@ -18,18 +18,27 @@ def normalize_and_scale_df(df: pd.DataFrame) -> pd.DataFrame:
     # Normalizes the columns (patient volumes) by Min-Max Scaling and scales the rows (ROIs) with Z-transformation.
 
     df_copy = df.copy()
+    column_sums = df_copy.sum()
+    
+    # Apply the formula: ln((10000*value)/sum_values + 1) "Log transformation"
+    # Alternatively for Min-Max Scaling: df_copy/df_copy.max() - Problem: Some rows have std = 0
+    transformed_df = np.log((10000 * df_copy) / column_sums + 1)
+    
+    norm_copy = transformed_df.copy()
 
-    norm_df = df_copy/df_copy.max() # Min-Max Scaling
-
-    norm_copy = norm_df.copy()
-
-    cols = norm_df.columns.get_level_values(-1).tolist()
+    cols = norm_copy.columns.get_level_values(-1).tolist()
     unique_cols = list(set(cols))
 
-    if len(unique_cols) > 0:
-        for col_type in unique_cols:
-            cols_to_scale = [col for col in norm_df.columns if col[-1] == col_type]
-            norm_copy[cols_to_scale] = norm_copy[cols_to_scale].apply(lambda x: (x - x.mean()) / x.std(), axis="columns")
+    for col_type in unique_cols:
+        cols_to_scale = [col for col in norm_copy.columns if col[-1] == col_type]
+
+        # Scale the selected columns per row
+        scaled = norm_copy[cols_to_scale].apply(
+            lambda row: (row - row.mean()) / row.std() if row.std() > 0 else pd.Series(0.0, index=row.index),
+            axis=1
+        )
+        
+        norm_copy.loc[:, cols_to_scale] = scaled
         
     return norm_copy
 
@@ -137,8 +146,8 @@ def load_mri_data_2D(
     # data.set_index("Filename", inplace=True)
     data = normalize_and_scale_df(data)
     
-    atlas_name = data_path.stem
-    data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
+    #atlas_name = data_path.stem
+    #data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
         
     all_file_names = data.columns
 
