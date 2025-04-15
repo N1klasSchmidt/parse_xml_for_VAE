@@ -83,7 +83,7 @@ def get_atlas(path: pathlib.PosixPath) -> str:
 
 def load_mri_data_2D(
     # The path to the directory where the MRI data is stored (.csv file formats)
-    data_path: pathlib.PosixPath,
+    data_path: str,
     # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
     csv_path: str = None,
     # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
@@ -92,6 +92,8 @@ def load_mri_data_2D(
     diagnoses: List[str] = None,
     covars: List[str] = [],
 ) -> Tuple:
+
+    data_path = pathlib.Path(data_path)
 
     # If the CSV path is provided, check if the file exists, make sure that the annotations are not provided
     if csv_path is not None:
