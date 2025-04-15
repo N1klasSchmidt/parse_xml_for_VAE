@@ -322,7 +322,7 @@ if __name__ == "__main__":
     data_paths = get_all_data("./xml_data")
     #print(data_paths)
     subjects_all, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
-                                                           csv_path="./metadata_20250110/full_data_train_valid_test.csv")
+                                                               csv_path="./metadata_20250110/full_data_train_valid_test.csv")
     #print("\nSubjects with all atlases:\n")
     #print(subjects_all)
     

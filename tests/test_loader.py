@@ -23,11 +23,11 @@ def test_flattening():
     assert flat_data.shape == (56,)
 
 def test_mri_2D():
-    subjects, overview = load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",
+    subjects, overview = load_mri_data_2D(data_path=pathlib.PosixPath("./xml_data/Aggregated_suit.csv"),
                                           csv_path="./metadata_20250110/full_data_train_valid_test.csv")
     assert isinstance(subjects, list)
     assert isinstance(overview, pd.DataFrame)
-    assert len(subjects) == 2
+    assert len(subjects) == 10
 
 
 def test_normalization():
@@ -42,7 +42,7 @@ def test_auto_process():
     subjects, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
                                                            csv_path="./metadata_20250110/full_data_train_valid_test.csv")
     assert isinstance(subjects, list) and isinstance(data_overview, pd.DataFrame)
-    assert len(subjects) == 2
+    assert len(subjects) == 10
     
     
 def test_get_atlas():

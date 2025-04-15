@@ -32,7 +32,7 @@ def test_multiple_file_processing():
     pat_list = valid_patients(paths_to_consider)
     path_list = get_all_xml_paths(test_dir, valid_patients=pat_list)
     assert isinstance(path_list, list)
-    assert len(path_list) == 2
+    assert len(path_list) == 10
 
 
 def test_valid_patients():
