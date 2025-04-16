@@ -18,13 +18,18 @@ class Config:
 
     def __init__(
         self,
-        # The learning rate for the model optimizer
-        RAW_DATA_DIR = None,
-        EXTRACTED_CSV_DIR = None,
-        EXTRACTED_CSV_T_DIR = None,
-        PROCESSED_CSV_DIR = None,
-        METADATA_PATHS = None,  
-        ALL_ATLASES = False,
+        # Path to directory where all the .xml files that should be processed are located.
+        RAW_DATA_DIR: str = None,
+        # Path to directory where all .csv data from the .xml files should be saved (rows=features, cols=patients).
+        EXTRACTED_CSV_DIR: str = None,
+        # Path to directory where all .csv data from the .xml files should be saved (rows=patients, cols=features).
+        EXTRACTED_CSV_T_DIR: str = None,
+        # Path to directory where all the log-normalized and z-scaled .csv files should be saved (rows=features, cols=patients).
+        PROCESSED_CSV_DIR: str = None,
+        # List of paths to metadata (.csv) files that should be used to filter the extracted per-patient data.
+        METADATA_PATHS: list = None,  
+        # Determines if for each patient all their atlases should be considered, or only one.
+        ALL_ATLASES: bool = False,
 
     ):
 

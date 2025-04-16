@@ -27,8 +27,9 @@ process_all_paths(directory=config.RAW_DATA_DIR,
                   valid_patients=valid_patients)
 
 
+# Convert data from per atlas to per patient, either with all atlases or only using one. 
 if config.ALL_ATLASES is False: 
-    load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",  # Here a concrete example, but can be anything.
+    load_mri_data_2D(data_path="./xml_data/Aggregated_suit.csv",  # Here a concrete example, but this can be anything.
                      csv_path=config.METADATA_PATHS[0])  # The code here should be changed to accept all the metadata files. Or merge all the metadata files to a single df. 
                     
 elif config.ALL_ATLASES is True: 
