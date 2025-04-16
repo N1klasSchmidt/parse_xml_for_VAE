@@ -43,8 +43,8 @@ def normalize_and_scale_df(df: pd.DataFrame) -> pd.DataFrame:
     return norm_copy
 
 
-def get_all_data(directory: str) -> list:
-    data_paths = list(pathlib.Path(directory).rglob("*.csv"))
+def get_all_data(directory: str, ext: str = "h5") -> list:
+    data_paths = list(pathlib.Path(directory).rglob(f"*.{ext}"))
     return data_paths
 
 
@@ -66,6 +66,29 @@ def combine_dfs(paths: list):
             next_df = pd.read_csv(paths[i], header=[0], index_col=0)
             joined_df = pd.concat([joined_df, next_df], join="inner")
     return joined_df
+
+
+def read_hdf5_to_df(filepath: str):
+    if not os.path.exists(filepath):
+        print(f"File {filepath} does not exist")
+        return None
+    try:
+        return pd.read_hdf(filepath, key='atlas_data')
+    except Exception as e:
+        print(f"Error reading {filepath}: {e}")
+        return None
+
+
+def read_hdf5_to_df_t(filepath: str):
+    if not os.path.exists(filepath):
+        print(f"File {filepath} does not exist")
+        return None
+    try:
+        return pd.read_hdf(filepath, key='atlas_data_t')
+    except Exception as e:
+        print(f"Error reading {filepath}: {e}")
+        return None
+
 
 # class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
 #     def __init__(self, subjects, transforms=None):
@@ -102,6 +125,7 @@ def load_mri_data_2D(
     # The diagnoses that you want to include in the data loading, defaults to all
     diagnoses: List[str] = None,
     covars: List[str] = [],
+    hdf5: bool = True
 ) -> Tuple:
 
     data_path = pathlib.Path(data_path)
@@ -156,10 +180,14 @@ def load_mri_data_2D(
     # For each subject, collect MRI data and variable data in the Subject object
     subjects = []
 
-    data = pd.read_csv(data_path, header=[0, 1], index_col=0)
+    if hdf5 == True: 
+        data = read_hdf5_to_df(filepath=data_path)
+    else:
+        data = pd.read_csv(data_path, header=[0, 1], index_col=0)
+    
     # data.set_index("Filename", inplace=True)
     data = normalize_and_scale_df(data)
-    
+
     #atlas_name = data_path.stem
     #data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
         
@@ -188,7 +216,7 @@ def load_mri_data_2D(
         subject["labels"] = {}
 
         for var in variables:
-            subject["labels"][var] = one_hot_labels[var].loc[index].to_numpy().tolist()
+            subject["labels"][var] = one_hot_labels[var].iloc[index].to_numpy().tolist()
 
         # Store Subject in our list
         subjects.append(subject)
@@ -203,16 +231,19 @@ def load_mri_data_2D_all_atlases(
     # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
     csv_paths: str = None,
     # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
-    annotations: pd.DataFrame = None,
+    annotations = None,
     # The diagnoses that you want to include in the data loading, defaults to all
-    diagnoses: List[str] = None,
-    covars: List[str] = [],
+    diagnoses = None,
+    covars = [],
+    hdf5: bool = True
 ) -> Tuple:
+    print("test 1")
 
     if csv_paths is not None:
         for csv_path in csv_paths: 
             assert os.path.isfile(csv_path), f"CSV file '{csv_path}' not found"
             assert annotations is None, "Both CSV and annotations provided"
+        print("test 2")
 
         # Initialize the data overview DataFrame
         data_overview = combine_dfs(csv_paths)
@@ -223,51 +254,60 @@ def load_mri_data_2D_all_atlases(
             annotations, pd.DataFrame
         ), "Annotations must be a pandas DataFrame"
         assert csv_paths is None, "Both CSV and annotations provided"
-
+        print("test 3")
         # Initialize the data overview DataFrame
         data_overview = annotations
+
+    print("test 4")
 
     # If no diagnoses are provided, use all diagnoses in the data overview
     if diagnoses is None:
         diagnoses = data_overview["Diagnosis"].unique().tolist()
+    print("test 5")
 
     # If the covariates are not a list, make them a list
     if not isinstance(covars, list):
         covars = [covars]
+    print("test 6")
 
     # If the diagnoses are not a list, make them a list
     if not isinstance(diagnoses, list):
         diagnoses = [diagnoses]
+    print("test 7")
     
     # Set all the variables that will be one-hot encoded
     variables = ["Diagnosis"] + covars
+    print("test 8")
 
     # Filter unwanted diagnoses
     data_overview = data_overview[data_overview["Diagnosis"].isin(diagnoses)]
-
+    print("test 9")
+    print(data_overview.shape)
     # produce one hot coded labels for each variable
     one_hot_labels = {}
     for var in variables:
         # check that the variables is in the data overview
         if var not in data_overview.columns:
+            print("test 10")
             raise ValueError(f"Column '{var}' not found in CSV file or annotations")
 
         # one hot encode the variable
         one_hot_labels[var] = pd.get_dummies(data_overview[var], dtype=float)
-
+    print("test 11")
     # For each subject, collect MRI data and variable data in the Subject object
     subjects = {}
-
+    
     for data_path in data_paths:
         current_atlas = get_atlas(data_path)
 
-        data = pd.read_csv(data_path, header=[0, 1], index_col=0)
+        if hdf5 == True: 
+            data = read_hdf5_to_df(filepath=data_path)
+        else:
+            data = pd.read_csv(data_path, header=[0, 1], index_col=0)
         
         data = normalize_and_scale_df(data)
-        
         atlas_name = data_path.stem
         data.to_csv(f"./processed_data/Proc_{atlas_name}.csv")
-
         all_file_names = data.columns
 
         for index, row in data_overview.iterrows():
@@ -337,15 +377,18 @@ if __name__ == "__main__":
     if not os.path.exists("./processed_data"):
         os.makedirs("./processed_data")
     
-    subjects, overview = load_mri_data_2D(data_path=pathlib.Path("./xml_data/Aggregated_suit.csv"),
-                                          csv_path="./metadata_20250110/full_data_train_valid_test.csv")
+    # subjects, overview = load_mri_data_2D(data_path=pathlib.Path("./xml_data/Aggregated_suit.csv"),
+    #                                       csv_path="./metadata_20250110/full_data_train_valid_test.csv")
     #print("\nSubjects for one atlas:\n")
     #print(subjects)
 
-    data_paths = get_all_data("./xml_data")
+    data_paths = get_all_data(directory="/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/xml_data", ext="h5")
     #print(data_paths)
     subjects_all, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
-                                                               csv_path="./metadata_20250110/full_data_train_valid_test.csv")
+                                                               csv_paths=["./metadata_20250110/full_data_train_valid_test.csv",
+                                                                          "./metadata_20250110/meta_data_NSS_all_variables.csv",
+                                                                          "./metadata_20250110/meta_data_whiteCAT_all_variables.csv"],
+                                                               hdf5=True)
     #print("\nSubjects with all atlases:\n")
     #print(subjects_all)
     

@@ -5,6 +5,7 @@ import pandas as pd
 import os
 import pathlib
 import regex as re
+import time
 
 
 def add_to_gitignore(path: str):
@@ -89,7 +90,91 @@ def dict_to_df(data_dict: dict, patient: str):
                 df_new_t = df_new.T
                 df_new_t.to_csv(filepath_t)  # feature rows
     return
+
+
+def dict_to_hdf5(data_dict: dict, patient: str):
+    """
+    Converts the dict of atlases into pandas DataFrames and saves them to HDF5 files.
     
+    Args:
+        data_dict: Dictionary containing atlas data
+        patient: Patient identifier
+    """
+    for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
+        filepath = f"./xml_data/Aggregated_{k}.h5"
+        filepath_t = f"./xml_data_t/Aggregated_{k}_t.h5"
+        # Ensure directory exists
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        
+        volumes = [vs for vs in v.keys() if vs != "names"]  # Measurements are volumes of white and gray matter
+
+        if "names" not in v:
+            print(f"No names found in section {k}, skipping.")
+            continue
+            
+        # Create MultiIndex for columns
+        arrays = [[patient]*len(volumes), volumes]
+        tuples = list(zip(*arrays))
+        index = pd.MultiIndex.from_tuples(tuples, names=["Filename", "Volume"])
+        
+        # Create DataFrame with the new data
+        data = {volume: v[volume] for volume in volumes}
+        df_new = pd.DataFrame(data, index=v["names"])
+        df_new.columns = index
+        
+        # Check if file exists
+        df_new_t = df_new.T  # Transposed version
+        
+        # Process regular version
+        if not os.path.exists(filepath):
+            # If file doesn't exist, create it and save the dataframe
+            df_new.to_hdf(filepath, key='atlas_data', mode='w')
+        else:
+            try:
+                # Read the existing dataframe
+                df_existing = pd.read_hdf(filepath, key='atlas_data')
+                
+                # Check if patient already exists
+                patient_cols = [col for col in df_existing.columns if col[0] == patient]
+                if patient_cols:
+                    # Drop existing patient data
+                    df_existing = df_existing.drop(columns=patient_cols)
+                    
+                # Combine the existing data with new data
+                result = pd.concat([df_existing, df_new], axis=1)
+                
+                # Save updated dataframe
+                result.to_hdf(filepath, key='atlas_data', mode='w')
+                
+            except Exception as e:
+                print(f"Error processing regular file {filepath}: {e}")
+                # Fallback - just write the new data
+                df_new.to_hdf(filepath, key='atlas_data', mode='w')
+        
+        # Process transposed version
+        if not os.path.exists(filepath_t):
+            # If file doesn't exist, create it and save the dataframe
+            df_new_t.to_hdf(filepath_t, key='atlas_data_t', mode='w')
+        else:
+            try:
+                # Read the existing dataframe
+                df_existing_t = pd.read_hdf(filepath_t, key='atlas_data_t')
+                
+                # Remove existing patient data if it exists
+                if patient in df_existing_t.index.get_level_values(0):
+                    df_existing_t = df_existing_t.drop(index=patient, level=0, errors='ignore')
+                
+                # Combine the existing data with new data
+                result_t = pd.concat([df_existing_t, df_new_t], axis=0)
+                
+                # Save updated dataframe
+                result_t.to_hdf(filepath_t, key='atlas_data_t', mode='w')
+                
+            except Exception as e:
+                print(f"Error processing transposed file {filepath_t}: {e}")
+                # Fallback - just write the new data
+                df_new_t.to_hdf(filepath_t, key='atlas_data_t', mode='w')
+
 
 def get_all_xml_paths(directory: str, valid_patients: list) -> list:
     # Finds all xml paths in the directory for which there is also a marker in the metadata.
@@ -106,7 +191,7 @@ def get_all_xml_paths(directory: str, valid_patients: list) -> list:
     return filtered_paths
 
 
-def process_all_paths(directory: str, valid_patients: list): 
+def process_all_paths(directory: str, valid_patients: list, batch_size: int = 100, hdf5: str = True): 
     # Convert a number of xml files to csv files with aggregated results for each brain atlas.
     paths = get_all_xml_paths(directory, valid_patients)
     print(f"Found a total of {len(paths)} valid patient .xml files.")
@@ -127,19 +212,31 @@ def process_all_paths(directory: str, valid_patients: list):
     
     # Each xml file is handled and saved separately, before moving to next. 
     # Importantly, the results of every new patient is concatenated to the existing aggregated atlas. 
-    for idx, path in enumerate(paths):  
-        print(f"Processing file {idx+1}/{len(paths)}: {path}")
-        parsed_dict = xml_parser(path)
-
-        match_no_ext = re.search(r"([^/\\]+)\.[^./\\]*$", path)  # Extract file stem
-        if match_no_ext:
-            patient_id = match_no_ext.group(1)
+    for i in range(0, len(paths), batch_size):
+        batch_paths = paths[i:i+batch_size]
+        print(f"Processing batch {i//batch_size + 1}/{(len(paths)-1)//batch_size + 1} ({len(batch_paths)} files)")
         
-        new_match = re.search(r"catROI_(.+)", patient_id)  # Extract file ID
-        if new_match:
-            patient_id = new_match.group(1)
+        start = time.perf_counter()
 
-        dict_to_df(parsed_dict, patient=patient_id)
+        for idx, path in enumerate(batch_paths):  
+            # print(f"Processing file {idx+1}/{len(paths)}: {path}")
+            parsed_dict = xml_parser(path)
+
+            match_no_ext = re.search(r"([^/\\]+)\.[^./\\]*$", path)  # Extract file stem
+            if match_no_ext:
+                patient_id = match_no_ext.group(1)
+            
+            new_match = re.search(r"catROI_(.+)", patient_id)  # Extract file ID
+            if new_match:
+                patient_id = new_match.group(1)
+
+            if hdf5 == True:
+                dict_to_hdf5(parsed_dict, patient=patient_id)
+            else: 
+                dict_to_df(parsed_dict, patient=patient_id)
+        
+        stop = time.perf_counter()
+        print(f"Elapsed time for batch: {stop-start}")
     return
 
 

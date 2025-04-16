@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<S>
+   <suit>
+      <ids>[1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28]</ids>
+      <names>
+         <item>Left I IV</item>
+         <item>Right I IV</item>
+         <item>Left V</item>
+         <item>Right V</item>
+         <item>Left VI</item>
+         <item>Vermis VI</item>
+         <item>Right VI</item>
+         <item>Left CrusI</item>
+         <item>Vermis CrusI</item>
+         <item>Right CrusI</item>
+         <item>Left CrusII</item>
+         <item>Vermis CrusII</item>
+         <item>Right CrusII</item>
+         <item>Left VIIb</item>
+         <item>Vermis VIIb</item>
+         <item>Right VIIb</item>
+         <item>Left VIIIa</item>
+         <item>Vermis VIIIa</item>
+         <item>Right VIIIa</item>
+         <item>Left VIIIb</item>
+         <item>Vermis VIIIb</item>
+         <item>Right VIIIb</item>
+         <item>Left IX</item>
+         <item>Vermis IX</item>
+         <item>Right IX</item>
+         <item>Left X</item>
+         <item>Vermis X</item>
+         <item>Right X</item>
+      </names>
+      <version>2577</version>
+      <data>
+         <Vgm>[1.12144321479111;1.48799225779164;1.53342363558565;1.86644325908153;3.24728257467469;0.764309854814968;3.21088648931471;5.82920820984688;0.00373725518157884;5.03391013340949;5.62176896707116;0.247784328658065;5.61993367551065;3.64562766527597;0.0935686335615873;3.6576943330902;3.46431001030351;0.656670631299242;3.38542372585569;2.43921191592061;0.381760808913;2.40287857884721;1.84292560516479;0.366607868735026;2.02273737853678;0.327462767371918;0.13645098979335;0.348251003949466]</Vgm>
+         <Vwm>[0.969356930711245;0.750976525699135;1.4246079410777;0.798815744426205;2.37935702891176;0.30027061085543;1.78536483561753;1.15965498875987;0.000352941204534752;2.16721191815888;0.783843195733653;0.0398156890586584;0.886905946980293;0.214082369470238;0.0376745126023403;0.351721594268732;0.295196100685344;0.247580411072777;0.286258843852993;0.361678459900323;0.0591372596771175;0.29300002243615;0.336392182370904;0.182129425873228;0.359192184434188;0.124533342845373;0.0468313762820942;0.0990666736591678]</Vwm>
+      </data>
+   </suit>
+   <thalamic_nuclei>
+      <ids>[1;2;3;4;5;6;7;8;9;10;11;12;13;14;15;16;17;18;19;20;21;22]</ids>
+      <names>
+         <item>lAnteroventral</item>
+         <item>lVentral_Anterior</item>
+         <item>lVentral_Lateral_Anterior</item>
+         <item>lVentral_Lateral_Posterior</item>
+         <item>lVentral_Posterolateral</item>
+         <item>lPulvinar</item>
+         <item>lLateral_Geniculate</item>
+         <item>lMedial_Geniculate</item>
+         <item>lCentromedian</item>
+         <item>lMediodorsal</item>
+         <item>lHabenula</item>
+         <item>rAnteroventral</item>
+         <item>rVentral_Anterior</item>
+         <item>rVentral_Lateral_Anterior</item>
+         <item>rVentral_Lateral_Posterior</item>
+         <item>rVentral_Posterolateral</item>
+         <item>rPulvinar</item>
+         <item>rLateral_Geniculate</item>
+         <item>rMedial_Geniculate</item>
+         <item>rCentromedian</item>
+         <item>rMediodorsal</item>
+         <item>rHabenula</item>
+      </names>
+      <version>2577</version>
+      <data>
+         <Vgm>[0;0.0495764742798512;0;0.0860980463614621;0.0338705909891165;0.258200019997966;0.0720784373207696;0.744600048094053;0.00354901991819054;0.0286392180635289;0.0459647093812771;0.334721589017837;0.0589921612428043;0.00645882400424294;0.089454908996896;0.0131607853813997;0.24293335222743;0.0745607903093257;0.829309857527243;0.0133882363308694;0.0576627488671786;0.0563607884916081]</Vgm>
+      </data>
+   </thalamic_nuclei>
+   <thalamus>
+      <ids>[1;2;3;4;5;6;7;8;9;10;11;12;13;14]</ids>
+      <names>
+         <item>lPulvinar</item>
+         <item>lAnterior</item>
+         <item>lMedio_Dorsal</item>
+         <item>lVentral_Latero_Dorsal</item>
+         <item>lCentral_Lateral-Lateral_Posterior-Medial_Pulvinar</item>
+         <item>lVentral_Anterior</item>
+         <item>lVentral_Latero_Ventral</item>
+         <item>rPulvinar</item>
+         <item>rAnterior</item>
+         <item>rMedio_Dorsal</item>
+         <item>rVentral_Latero_Dorsal</item>
+         <item>rCentral_Lateral-Lateral_Posterior-Medial_Pulvinar</item>
+         <item>rVentral_Anterior</item>
+         <item>rVentral_Latero_Ventral</item>
+      </names>
+      <version>2577</version>
+      <data>
+         <Vgm>[0.385533359955488;0.459607877046355;0.535129448334265;0.386294145806806;0.492298068560501;0.4007490480992;0.233317665683626;0.694392202803111;0.315647082039423;0.479847090315825;0.441662775454044;0.445090222988426;0.366835321290562;0.200776486720889]</Vgm>
+      </data>
+   </thalamus>
+</S>
+
