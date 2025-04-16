@@ -13,7 +13,7 @@ config = Config(
     METADATA_PATHS = ["./metadata_20250110/full_data_train_valid_test.csv",
                       "./metadata_20250110/meta_data_NSS_all_variables.csv",
                       "./metadata_20250110/meta_data_whiteCAT_all_variables.csv"], 
-    ALL_ATLASES = False
+    ALL_ATLASES = True
 )
 
 
@@ -38,7 +38,7 @@ elif config.ALL_ATLASES is True:
     subjects_all, data_overview = load_mri_data_2D_all_atlases(data_paths=data_paths,
                                                                csv_paths=config.METADATA_PATHS,
                                                                hdf5=True)
-    print(subjects_all)
+    
 else: 
     print("Please specify if all atlases should be processed, or only one.")
                                                     

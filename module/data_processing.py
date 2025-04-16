@@ -349,6 +349,20 @@ def load_mri_data_2D_all_atlases(
     return list(subjects.values()), data_overview
 
 
+def load_mri_data_3D_all_atlases(
+    # The path to the directory where the MRI data is stored (.csv file formats)
+    data_paths: list,
+    # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
+    csv_paths: str = None,
+    # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
+    annotations = None,
+    # The diagnoses that you want to include in the data loading, defaults to all
+    diagnoses = None,
+    covars = [],
+    hdf5: bool = True
+    ) -> Tuple:
+    return print("testing")
+
 # # This function processes a list of subjects by applying a series of transformations to them, and then loads
 # # them into a DataLoader object.
 # def process_subjects(
