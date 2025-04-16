@@ -55,6 +55,17 @@ def get_atlas(path: pathlib.PosixPath) -> str:
         atlas = match.group(1)
     return atlas
 
+def combine_dfs(paths: list):
+    # Combines any number of csv files to a single pandas DataFrame, keeping only shared column indices. 
+    for i in range(1,len(paths)):
+        if i == 1: 
+            joined_df = pd.read_csv(paths[i-1], header=[0], index_col=0)
+            next_df = pd.read_csv(paths[i], header=[0], index_col=0)
+            joined_df = pd.concat([joined_df, next_df], join="inner")  # Parameter "inner" keeps only the shared column indices.
+        else:
+            next_df = pd.read_csv(paths[i], header=[0], index_col=0)
+            joined_df = pd.concat([joined_df, next_df], join="inner")
+    return joined_df
 
 # class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
 #     def __init__(self, subjects, transforms=None):
@@ -85,7 +96,7 @@ def load_mri_data_2D(
     # The path to the directory where the MRI data is stored (.csv file formats)
     data_path: str,
     # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
-    csv_path: str = None,
+    csv_paths: list = None,
     # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
     annotations: pd.DataFrame = None,
     # The diagnoses that you want to include in the data loading, defaults to all
@@ -96,19 +107,20 @@ def load_mri_data_2D(
     data_path = pathlib.Path(data_path)
 
     # If the CSV path is provided, check if the file exists, make sure that the annotations are not provided
-    if csv_path is not None:
-        assert os.path.isfile(csv_path), f"CSV file '{csv_path}' not found"
-        assert annotations is None, "Both CSV and annotations provided"
+    if csv_paths is not None:
+        for csv_path in csv_paths: 
+            assert os.path.isfile(csv_path), f"CSV file '{csv_path}' not found"
+            assert annotations is None, "Both CSV and annotations provided"
 
         # Initialize the data overview DataFrame
-        data_overview = pd.read_csv(csv_path)
+        data_overview = combine_dfs(csv_paths)
 
     # If the annotations are provided, make sure that they are a pandas DataFrame, and that the CSV path is not provided
     if annotations is not None:
         assert isinstance(
             annotations, pd.DataFrame
         ), "Annotations must be a pandas DataFrame"
-        assert csv_path is None, "Both CSV and annotations provided"
+        assert csv_paths is None, "Both CSV and annotations provided"
 
         # Initialize the data overview DataFrame
         data_overview = annotations
@@ -189,7 +201,7 @@ def load_mri_data_2D_all_atlases(
     # The path to the directory where the MRI data is stored (.csv file formats)
     data_paths: list,
     # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
-    csv_path: str = None,
+    csv_paths: str = None,
     # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
     annotations: pd.DataFrame = None,
     # The diagnoses that you want to include in the data loading, defaults to all
@@ -197,20 +209,20 @@ def load_mri_data_2D_all_atlases(
     covars: List[str] = [],
 ) -> Tuple:
 
-    # If the CSV path is provided, check if the file exists, make sure that the annotations are not provided
-    if csv_path is not None:
-        assert os.path.isfile(csv_path), f"CSV file '{csv_path}' not found"
-        assert annotations is None, "Both CSV and annotations provided"
+    if csv_paths is not None:
+        for csv_path in csv_paths: 
+            assert os.path.isfile(csv_path), f"CSV file '{csv_path}' not found"
+            assert annotations is None, "Both CSV and annotations provided"
 
         # Initialize the data overview DataFrame
-        data_overview = pd.read_csv(csv_path)
+        data_overview = combine_dfs(csv_paths)
 
     # If the annotations are provided, make sure that they are a pandas DataFrame, and that the CSV path is not provided
     if annotations is not None:
         assert isinstance(
             annotations, pd.DataFrame
         ), "Annotations must be a pandas DataFrame"
-        assert csv_path is None, "Both CSV and annotations provided"
+        assert csv_paths is None, "Both CSV and annotations provided"
 
         # Initialize the data overview DataFrame
         data_overview = annotations
