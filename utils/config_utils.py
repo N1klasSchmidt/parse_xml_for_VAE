@@ -30,7 +30,10 @@ class Config:
         METADATA_PATHS: list = None,  
         # Determines if for each patient all their atlases should be considered, or only one.
         ALL_ATLASES: bool = False,
-
+        # Determines if training or testing data should be extracted.
+        TRAIN_DATA: bool = True,
+        # Names of all the folders in RAW_DATA_DIR that should be used for testing.
+        TEST_DATA: list = None
     ):
 
         for path in [RAW_DATA_DIR, METADATA_PATHS]:
@@ -47,6 +50,8 @@ class Config:
         self.PROCESSED_CSV_DIR = PROCESSED_CSV_DIR
         self.METADATA_PATHS = METADATA_PATHS
         self.ALL_ATLASES = ALL_ATLASES
+        self.TRAIN_DATA = TRAIN_DATA
+        self.TEST_DATA = TEST_DATA
 
         metadata_parent = pathlib.Path(self.METADATA_PATHS[0]).parents[0]
         

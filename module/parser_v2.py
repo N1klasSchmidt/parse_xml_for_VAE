@@ -15,6 +15,32 @@ def add_to_gitignore(path: str):
     return
 
 
+def remove_paths_containing(list_of_paths: list, keys: list):
+    filtered_paths = []
+    for path in list_of_paths:
+        should_include = True
+        for folder in keys:
+            if folder + os.sep in path or folder in os.path.basename(path):
+                should_include = False
+                break  # If one excluded folder is found, no need to check others for this path
+        if should_include:
+            filtered_paths.append(path)
+    return filtered_paths
+
+
+def keep_paths_containing(list_of_paths: list, keys: list):
+    filtered_paths = []
+    for path in list_of_paths:
+        should_include = False
+        for folder in keys:
+            if folder + os.sep in path or folder in os.path.basename(path):
+                should_include = True
+                break  # If one desired folder is found, no need to check others for this path
+        if should_include:
+            filtered_paths.append(path)
+    return filtered_paths
+
+
 def xml_parser(path_to_xml_file: str) -> dict:
     # Parses .xml file to extract from each atlas the ROI names ("names") and the corresponding measurements ("data")
     tree = ET.parse(path_to_xml_file)
@@ -42,12 +68,19 @@ def xml_parser(path_to_xml_file: str) -> dict:
     return results
 
 
-def dict_to_df(data_dict: dict, patient: str):
+def dict_to_df(data_dict: dict, patient: str, ext: str, train: bool = True):
     # Converts the dict of atlases into separate pandas DataFrames and saves these each to
     # a csv file (once with rows as features and once with columns as features).
+    
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
-        filepath = f"./xml_data/Aggregated_{k}.csv"  
-        filepath_t = f"./xml_data_t/Aggregated_{k}_t.csv"
+        
+        if train == True: 
+            filepath = f"./train_xml_data/Aggregated_{k}.{ext}"
+            filepath_t = f"./train_xml_data_t/Aggregated_{k}_t.{ext}"
+        
+        if train == False: 
+            filepath = f"./test_xml_data/Aggregated_{k}.{ext}"
+            filepath_t = f"./test_xml_data_t/Aggregated_{k}_t.{ext}"
 
         volumes = [vs for vs in v.keys() if vs != "names"]  # Measurements are volumes of white and gray matter
 
@@ -92,17 +125,19 @@ def dict_to_df(data_dict: dict, patient: str):
     return
 
 
-def dict_to_hdf5(data_dict: dict, patient: str):
-    """
-    Converts the dict of atlases into pandas DataFrames and saves them to HDF5 files.
-    
-    Args:
-        data_dict: Dictionary containing atlas data
-        patient: Patient identifier
-    """
+def dict_to_hdf5(data_dict: dict, patient: str, ext: str, train: bool = True):
+    # Converts the dict of atlases into separate pandas DataFrames and saves these each to
+    # a h5 file (once with rows as features and once with columns as features). h5 format allows computationally more efficient processing.
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
-        filepath = f"./xml_data/Aggregated_{k}.h5"
-        filepath_t = f"./xml_data_t/Aggregated_{k}_t.h5"
+        
+        if train == True: 
+            filepath = f"./train_xml_data/Aggregated_{k}.{ext}"
+            filepath_t = f"./train_xml_data_t/Aggregated_{k}_t.{ext}"
+        
+        if train == False: 
+            filepath = f"./test_xml_data/Aggregated_{k}.{ext}"
+            filepath_t = f"./test_xml_data_t/Aggregated_{k}_t.{ext}"
+
         # Ensure directory exists
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         
@@ -176,11 +211,25 @@ def dict_to_hdf5(data_dict: dict, patient: str):
                 df_new_t.to_hdf(filepath_t, key='atlas_data_t', mode='w')
 
 
-def get_all_xml_paths(directory: str, valid_patients: list) -> list:
+def get_all_xml_paths(directory: str, valid_patients: list, train: bool = True, test_data: list = None) -> list:
     # Finds all xml paths in the directory for which there is also a marker in the metadata.
-    xml_paths = pathlib.Path(directory).rglob("label/*.xml")  # rglob searches in all subdirectories
-    xml_paths = list(xml_paths)
-    xml_paths = [str(i) for i in xml_paths]  # Convert PosixPath to string to allow iteration
+    if train == True: 
+        assert test_data is not None, "Provide names of folders with desired testing data to exclude!"
+        
+        xml_paths = pathlib.Path(directory).rglob("label/*.xml")
+        xml_paths = list(xml_paths)
+        xml_paths = [str(i) for i in xml_paths]
+
+        xml_paths = remove_paths_containing(list_of_paths=xml_paths, keys=test_data)
+
+    if train == False: 
+        assert test_data is not None, "Provide names of folders with desired testing data to include!"
+
+        xml_paths = pathlib.Path(directory).rglob("label/*.xml")  # rglob searches in all subdirectories
+        xml_paths = list(xml_paths)
+        xml_paths = [str(i) for i in xml_paths]  # Convert PosixPath to string to allow iteration
+
+        xml_paths = keep_paths_containing(list_of_paths=xml_paths, keys=test_data)
 
     partial_set = set(valid_patients)
     filtered_paths = [
@@ -191,9 +240,9 @@ def get_all_xml_paths(directory: str, valid_patients: list) -> list:
     return filtered_paths
 
 
-def process_all_paths(directory: str, valid_patients: list, batch_size: int = 100, hdf5: str = True): 
+def process_all_paths(directory: str, valid_patients: list, test_data: list, batch_size: int = 10, hdf5: bool = True, train: bool = True): 
     # Convert a number of xml files to csv files with aggregated results for each brain atlas.
-    paths = get_all_xml_paths(directory, valid_patients)
+    paths = get_all_xml_paths(directory, valid_patients, train, test_data)
     print(f"Found a total of {len(paths)} valid patient .xml files.")
 
     # First, identify all section types that will be processed in next step
@@ -202,13 +251,13 @@ def process_all_paths(directory: str, valid_patients: list, batch_size: int = 10
         parsed_dict = xml_parser(path)
         section_types.update(parsed_dict.keys())
     
-    # Clear existing files at the beginning
-    for section in section_types:
-        filepath = f"./xml_data/Aggregated_{section}.csv"
-        if os.path.exists(filepath):
-            # Clear the file by opening in write mode
-            with open(filepath, "w+") as f:
-                f.close()
+    # # Clear existing files at the beginning
+    # for section in section_types:
+    #     filepath = f"./xml_data/Aggregated_{section}.csv"
+    #     if os.path.exists(filepath):
+    #         # Clear the file by opening in write mode
+    #         with open(filepath, "w+") as f:
+    #             f.close()
     
     # Each xml file is handled and saved separately, before moving to next. 
     # Importantly, the results of every new patient is concatenated to the existing aggregated atlas. 
@@ -231,9 +280,9 @@ def process_all_paths(directory: str, valid_patients: list, batch_size: int = 10
                 patient_id = new_match.group(1)
 
             if hdf5 == True:
-                dict_to_hdf5(parsed_dict, patient=patient_id)
+                dict_to_hdf5(parsed_dict, patient=patient_id, train=train, ext="h5")
             else: 
-                dict_to_df(parsed_dict, patient=patient_id)
+                dict_to_df(parsed_dict, patient=patient_id, train=train, ext="csv")
         
         stop = time.perf_counter()
         print(f"Elapsed time for batch: {stop-start}")
