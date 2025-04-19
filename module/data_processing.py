@@ -104,6 +104,7 @@ def read_hdf5_to_df_t(filepath: str):
 
 #         measurements = self.subjects[idx]["measurements"]
 #         labels = self.subjects[idx]["labels"]
+#         names = self.subjects[idx]["name"]
 
 #         if self.transform:
 #             transformed = self.transforms(measurements=measurements)
@@ -112,7 +113,7 @@ def read_hdf5_to_df_t(filepath: str):
 #         measurements = torch.as_tensor(measurements, dtype=torch.float64)
 #         labels = torch.as_tensor(labels, dtype=torch.int64)
 
-#         return measurements, labels
+#         return measurements, labels, names
 
 
 def load_mri_data_2D(
@@ -348,20 +349,6 @@ def load_mri_data_2D_all_atlases(
     # Return the list of subjects and the filtered annotations
     return list(subjects.values()), data_overview
 
-
-def load_mri_data_3D_all_atlases(
-    # The path to the directory where the MRI data is stored (.csv file formats)
-    data_paths: list,
-    # The path to the CSV file that contains the filenames of the MRI data and the diagnoses and covariates
-    csv_paths: str = None,
-    # The annotations DataFrame that contains the filenames of the MRI data and the diagnoses and covariates
-    annotations = None,
-    # The diagnoses that you want to include in the data loading, defaults to all
-    diagnoses = None,
-    covars = [],
-    hdf5: bool = True
-    ) -> Tuple:
-    return print("testing")
 
 # # This function processes a list of subjects by applying a series of transformations to them, and then loads
 # # them into a DataLoader object.

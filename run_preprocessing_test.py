@@ -15,7 +15,7 @@ config_test = Config(
                       "./metadata_20250110/meta_data_whiteCAT_all_variables.csv"], 
     ALL_ATLASES = True,
     TRAIN_DATA = False,
-    TEST_DATA = ["dataset_1"]
+    TEST_DATA = ["whitecatnii", "whiteCAT_updt","nss_updt", "NSSnii"]
 )
 
 
