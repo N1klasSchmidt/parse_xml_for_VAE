@@ -6,7 +6,7 @@ from module.data_processing import load_mri_data_2D, load_mri_data_2D_all_atlase
 
 
 config_test = Config(
-    RAW_DATA_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/testing_files",  #"/net/data.isilon/ag-cherrmann/stumrani/mri_prep",
+    RAW_DATA_DIR = "/net/data.isilon/ag-cherrmann/stumrani/mri_prep",# "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/testing_files", 
     EXTRACTED_CSV_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_xml_data",
     EXTRACTED_CSV_T_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_xml_data_t",
     PROCESSED_CSV_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_processed_data",
