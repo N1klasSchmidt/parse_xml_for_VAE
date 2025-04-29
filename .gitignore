@@ -3,9 +3,8 @@ mri_prep
 train_xml_data
 train_xml_data_t
 train_processed_data
-testing_files
-metadata_20250110
-mri_prep
 test_xml_data
 test_xml_data_t
 test_processed_data
+relevant_metadata
+testing_files
