@@ -2,20 +2,19 @@ import os
 import pathlib
 from typing import List
 
+"""
+Config class to set up all parameters for model preparation and training. Is used with the run_ModelXYZ.py scripts.
+"""
+
+# Add created folders directly to the .gitignore file
 def add_to_gitignore(path: str):
     with open(".gitignore", "a") as g:
         g.write(f"{path}")
         g.write("\n")
     return
 
-
-'''
-Config class to set up all parameters for model preparation and training. Is used with the run_ModelXYZ.py scripts.
-'''
-
 # Set up all parameters for model preparation and training
 class Config:
-
     def __init__(
         self,
         # Path to directory where all the .xml files that should be processed are located.

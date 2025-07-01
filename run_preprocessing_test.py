@@ -1,20 +1,26 @@
 import pathlib
-
 from utils.config_utils import Config
 from module.parser_v2 import valid_patients, process_all_paths
 from module.data_processing import load_mri_data_2D, load_mri_data_2D_all_atlases
 
 
+"""
+To be used in conjunction with run_preprocessing_train.py, but can also be used independently.
+Code to extract a specific cohort of the .xml data as testing data. This is specified by the TEST_DATA list in the config file.
+This parameter specifies from folders .xml files should be extracted.
+Data is then saved as .h5 files for each of the atlases specified in the xml files.
+It is critical to ensure that all .xml files contain information for all the same atlases. Otherwise a more nuanced parsing of certain files is required.
+"""
+
+# Adjust paths as necessary
 config_test = Config(
     RAW_DATA_DIR = "/net/data.isilon/ag-cherrmann/stumrani/mri_prep",# "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/testing_files", 
     EXTRACTED_CSV_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_xml_data",
     EXTRACTED_CSV_T_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_xml_data_t",
     PROCESSED_CSV_DIR = "/net/data.isilon/ag-cherrmann/nschmidt/project/parse_xml_for_VAE/test_processed_data",
-    METADATA_PATHS = ["./metadata_20250110/full_data_train_valid_test.csv",
-                      "./metadata_20250110/meta_data_NSS_all_variables.csv",
-                      "./metadata_20250110/meta_data_whiteCAT_all_variables.csv"], 
+    METADATA_PATHS = ["./metadata_20250110/full_data_train_valid_test.csv"], # Technically more paths can be specified
     ALL_ATLASES = True,
-    TRAIN_DATA = False,
+    TRAIN_DATA = False,  # This is the critical difference to the run_preprocessing_train.py script
     TEST_DATA = ["whitecatnii", "whiteCAT_updt","nss_updt", "NSSnii", "NUdatanii"]
 )
 
@@ -33,7 +39,12 @@ process_all_paths(directory=config_test.RAW_DATA_DIR,
                   test_data=config_test.TEST_DATA,
                   hdf5=True)
 
+
+# The below code can be used to test compatibility with the load_mri_data_2D function that is used in the next step of the project:
+# See https://github.com/N1klasSchmidt/catatonia_VAE_2D for details.
 # Convert data from per atlas to per patient, either with all atlases or only using one. 
+
+
 # if config_test.ALL_ATLASES is False: 
 #     subjects_all, data_overview = load_mri_data_2D(data_path="./xml_data/Aggregated_suit.h5",  # Here a concrete example, but this can be anything.
 #                                                    csv_paths=config_test.METADATA_PATHS,

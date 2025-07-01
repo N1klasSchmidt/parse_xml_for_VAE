@@ -7,6 +7,11 @@ import numpy as np
 import pathlib
 
 
+"""
+This is code is largely used to validate the functionality of the extracted .h5 data with the loading functions used in 
+https://github.com/N1klasSchmidt/catatonia_VAE_2D to create dataloaders of PyTorch models.
+"""
+
 def flatten_array(df: pd.DataFrame) -> np.ndarray:
     # Converts data frame to flattened array. 
     array = df.to_numpy()
@@ -88,32 +93,6 @@ def read_hdf5_to_df_t(filepath: str):
     except Exception as e:
         print(f"Error reading {filepath}: {e}")
         return None
-
-
-# class CustomDataset(Dataset):  # Create Datasets that can then be converted into DataLoader objects
-#     def __init__(self, subjects, transforms=None):
-#         self.subjects = subjects
-#         self.transforms = transforms
-
-#     def __len__(self):
-#         return len(self.subjects)
-
-#     def __getitem__(self, idx):
-#         if torch.is_tensor(idx):
-#             idx = idx.tolist()
-
-#         measurements = self.subjects[idx]["measurements"]
-#         labels = self.subjects[idx]["labels"]
-#         names = self.subjects[idx]["name"]
-
-#         if self.transform:
-#             transformed = self.transforms(measurements=measurements)
-#             measurements = transformed['measurements']
-
-#         measurements = torch.as_tensor(measurements, dtype=torch.float64)
-#         labels = torch.as_tensor(labels, dtype=torch.int64)
-
-#         return measurements, labels, names
 
 
 def load_mri_data_2D(
@@ -349,28 +328,6 @@ def load_mri_data_2D_all_atlases(
     # Return the list of subjects and the filtered annotations
     return list(subjects.values()), data_overview
 
-
-# # This function processes a list of subjects by applying a series of transformations to them, and then loads
-# # them into a DataLoader object.
-# def process_subjects(
-#     # The list of tio.Subject objects that you want to process
-#     subjects: List,
-#     # The transformations that you want to apply to the subjects
-#     transforms: torch.compose,
-#     # The batch size for the DataLoader (the larger, the more memory is needed)
-#     batch_size: int,
-#     # Whether the data should be shuffled or not. Shuffling is important for training, but not for validation.
-#     shuffle_data: bool,
-# ) -> DataLoader:
-
-#     # Apply transformations
-#     dataset = CustomDataset(subjects=subjects, transforms=transform)
-
-#     # Create data loader
-#     data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle_data)
-
-#     # Return the DataLoader object
-#     return data_loader
 
 
 if __name__ == "__main__":

@@ -3,6 +3,10 @@ import pandas as pd
 import pathlib
 from module.data_processing import load_mri_data_2D, flatten_array, normalize_and_scale_df, load_mri_data_2D_all_atlases, get_all_data, get_atlas, combine_dfs
 
+"""
+Tests to check proper functionality of data loaders.
+"""
+
 def test_loading(): 
     path = "./xml_data/Aggregated_suit.csv"
     df = pd.read_csv(path, header=[0, 1], index_col=0)

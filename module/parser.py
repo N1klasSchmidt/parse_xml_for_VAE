@@ -6,7 +6,13 @@ import os
 import pathlib
 import regex as re
 
+""" OLD VERSION OF parser_v2.py
+This is the central code to parse .xml files within a given directory. Each xml file must contain the same volume segmentation measurements (atlases).
+The data per patient is extracted and concatenated to a single dataframe / h5 file, which can easily be processed further.
+As the current code operates by opening and closing the aggregated files repeatedly, -h5 files were chosen for computational efficiency.
+"""
 
+# Automatically add created folders to .gitignore file
 def add_to_gitignore(path: str):
     with open(".gitignore", "a") as g:
         g.write("\n")
@@ -14,6 +20,7 @@ def add_to_gitignore(path: str):
     return
 
 
+# Parsing file for each single .xml file. Each section corresponds with one atlas.
 def xml_parser(path_to_xml_file: str) -> dict:
     # Parses .xml file to extract from each atlas the ROI names ("names") and the corresponding measurements ("data")
     tree = ET.parse(path_to_xml_file)
@@ -40,10 +47,9 @@ def xml_parser(path_to_xml_file: str) -> dict:
 
     return results
 
-
+# Converts the dict of atlases into separate pandas DataFrames and saves these each to a csv file (once with rows as features and once with columns as features).
+# Using .h5 files instead of .csv this processing step was sped up in parser_v2.py
 def dict_to_df(data_dict: dict, patient: str):
-    # Converts the dict of atlases into separate pandas DataFrames and saves these each to
-    # a csv file (once with rows as features and once with columns as features).
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
         filepath = f"./xml_data/Aggregated_{k}.csv"  
         filepath_t = f"./xml_data_t/Aggregated_{k}_t.csv"
@@ -90,9 +96,8 @@ def dict_to_df(data_dict: dict, patient: str):
                 df_new_t.to_csv(filepath_t)  # feature rows
     return
     
-
+# Finds all xml paths in the directory for which there is also a marker in the metadata.
 def get_all_xml_paths(directory: str, valid_patients: list) -> list:
-    # Finds all xml paths in the directory for which there is also a marker in the metadata.
     xml_paths = pathlib.Path(directory).rglob("label/*.xml")  # rglob searches in all subdirectories
     xml_paths = list(xml_paths)
     xml_paths = [str(i) for i in xml_paths]  # Convert PosixPath to string to allow iteration
@@ -105,9 +110,8 @@ def get_all_xml_paths(directory: str, valid_patients: list) -> list:
     
     return filtered_paths
 
-
+# Convert a number of xml files to csv files with aggregated results for each brain atlas.
 def process_all_paths(directory: str, valid_patients: list): 
-    # Convert a number of xml files to csv files with aggregated results for each brain atlas.
     paths = get_all_xml_paths(directory, valid_patients)
     print(f"Found a total of {len(paths)} valid patient .xml files.")
 
@@ -143,6 +147,7 @@ def process_all_paths(directory: str, valid_patients: list):
     return
 
 
+# Function to find all the filenames for which there exists also metadata.
 def valid_patients(paths: list) -> list:
     # From the metadata, get all file identifiers to filter xml files. 
 

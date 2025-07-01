@@ -7,14 +7,20 @@ import pathlib
 import regex as re
 import time
 
+""" IMPOROVED VERSION OF parser.py
+This is the central code to parse .xml files within a given directory. Each xml file must contain the same volume segmentation measurements (atlases).
+The data per patient is extracted and concatenated to a single dataframe / h5 file, which can easily be processed further.
+As the current code operates by opening and closing the aggregated files repeatedly, -h5 files were chosen for computational efficiency.
+"""
 
+# Automatically add created folders to .gitignore file
 def add_to_gitignore(path: str):
     with open(".gitignore", "a") as g:
         g.write("\n")
         g.write(f"{path}")
     return
 
-
+# Filter out paths that come from the folders specified to be used for testing / training.
 def remove_paths_containing(list_of_paths: list, keys: list):
     filtered_paths = []
     for path in list_of_paths:
@@ -27,7 +33,7 @@ def remove_paths_containing(list_of_paths: list, keys: list):
             filtered_paths.append(path)
     return filtered_paths
 
-
+# Keep paths that come from the folders specified to be used for testing / training.
 def keep_paths_containing(list_of_paths: list, keys: list):
     filtered_paths = []
     for path in list_of_paths:
@@ -41,6 +47,7 @@ def keep_paths_containing(list_of_paths: list, keys: list):
     return filtered_paths
 
 
+# Parsing file for each single .xml file. Each section corresponds with one atlas.
 def xml_parser(path_to_xml_file: str) -> dict:
     # Parses .xml file to extract from each atlas the ROI names ("names") and the corresponding measurements ("data")
     tree = ET.parse(path_to_xml_file)
@@ -67,11 +74,9 @@ def xml_parser(path_to_xml_file: str) -> dict:
 
     return results
 
-
-def dict_to_df(data_dict: dict, patient: str, ext: str, train: bool = True):
-    # Converts the dict of atlases into separate pandas DataFrames and saves these each to
-    # a csv file (once with rows as features and once with columns as features).
-    
+# Converts the dict of atlases into separate pandas DataFrames and saves these each to
+# a csv file (once with rows as features and once with columns as features).
+def dict_to_df(data_dict: dict, patient: str, ext: str, train: bool = True):    
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
         
         if train == True: 
@@ -124,10 +129,9 @@ def dict_to_df(data_dict: dict, patient: str, ext: str, train: bool = True):
                 df_new_t.to_csv(filepath_t)  # feature rows
     return
 
-
+# Converts the dict of atlases into separate pandas DataFrames and saves these each to
+# a h5 file (once with rows as features and once with columns as features). h5 format allows computationally more efficient processing.
 def dict_to_hdf5(data_dict: dict, patient: str, ext: str, train: bool = True):
-    # Converts the dict of atlases into separate pandas DataFrames and saves these each to
-    # a h5 file (once with rows as features and once with columns as features). h5 format allows computationally more efficient processing.
     for k, v in data_dict.items():  # k is the atlas, v is the data in the atlas
         
         if train == True: 
@@ -210,9 +214,9 @@ def dict_to_hdf5(data_dict: dict, patient: str, ext: str, train: bool = True):
                 # Fallback - just write the new data
                 df_new_t.to_hdf(filepath_t, key='atlas_data_t', mode='w')
 
-
+# Finds all xml paths in the directory for which there is also a marker in the metadata.
+# Keeps only the training / testing relevant paths determined by train boolean.
 def get_all_xml_paths(directory: str, valid_patients: list, train: bool = True, test_data: list = None) -> list:
-    # Finds all xml paths in the directory for which there is also a marker in the metadata.
     if train == True: 
         assert test_data is not None, "Provide names of folders with desired testing data to exclude!"
         
@@ -239,9 +243,8 @@ def get_all_xml_paths(directory: str, valid_patients: list, train: bool = True, 
     
     return filtered_paths
 
-
+# Convert a number of xml files to h5  files with aggregated results for each brain atlas.
 def process_all_paths(directory: str, valid_patients: list, test_data: list, batch_size: int = 10, hdf5: bool = True, train: bool = True): 
-    # Convert a number of xml files to csv files with aggregated results for each brain atlas.
     paths = get_all_xml_paths(directory, valid_patients, train, test_data)
     print(f"Found a total of {len(paths)} valid patient .xml files.")
 
@@ -288,7 +291,7 @@ def process_all_paths(directory: str, valid_patients: list, test_data: list, bat
         print(f"Elapsed time for batch: {stop-start}")
     return
 
-
+# Function to find all the filenames for which there exists also metadata.
 def valid_patients(paths: list) -> list:
     # From the metadata, get all file identifiers to filter xml files. 
 
