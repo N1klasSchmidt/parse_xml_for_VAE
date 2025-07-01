@@ -6,11 +6,12 @@ Python 3.13.2 was used to run and test the code. Further requirements can be fou
 
 ## Folder Structure
 Parser_XML_for_VAE
-  ├── `module`:                             for storing all the parsing scripts  
-  ├── `tests`:                              for storing all the tests
-  ├── `metadata`:                           for storing all the relevant metadata
-  ├── `run_preprocessing_test.py`:          to run the preprocessing and extract training data
-  └── `run_preprocessing_train.py`:         to run the preprocessing and extract testing data
+├── `module`:                             for storing all the parsing scripts  
+├── `tests`:                              for storing all the tests
+├── `metadata`:                           for storing all the relevant metadata
+├── `run_preprocessing_test.py`:          to run the preprocessing and extract training data
+└── `run_preprocessing_train.py`:         to run the preprocessing and extract testing data
+
 
 ## Functionality
 The current parser, found in module/parser_v2.py is specifically configured to extract brain segmentation volumes extracted from MRI scans through the CAT12 software (https://neuro-jena.github.io/cat12-help/).
